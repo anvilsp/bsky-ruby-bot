@@ -164,22 +164,15 @@ end
 
 def mark_as_read(session)
     # mark all notifications as read
-    # initialize request
-    uri = URI.parse("https://bsky.social/xrpc/app.bsky.notification.updateSeen")
-    request = Net::HTTP::Post.new(uri)
-    request.content_type = "application/json"
-    request["Authorization"] = "Bearer #{session["accessJwt"]}"
-    request.body = JSON.dump({
-        "seenAt" => DateTime.now
-    })
-
-    req_options = {
-        use_ssl: uri.scheme == "https"
-    }
-
-    # send request
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-        http.request(request)
-    end
-    return response
+    resp = HTTParty.post(
+        'https://bsky.social/xrpc/app.bsky.notification.updateSeen',
+        headers: {
+            "Content-Type" => "application/json",
+            "Authorization" => "Bearer #{session["accessJwt"]}"
+        },
+        body: JSON.dump({
+            "seenAt" => DateTime.now
+        })
+    )
+    return resp
 end
