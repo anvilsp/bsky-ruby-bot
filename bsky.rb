@@ -37,20 +37,9 @@ def bsky_connect
     end
 end
 
-def build_post(text)
-    # prepares a self text post
-    now = DateTime.now
-    post = JSON.dump({
-        "text" => text,
-        "createdAt" => now,
-        "langs" => ["en-US"]
-    })
-    return post
-end
 
-def create_text_post(session)
+def send_post(session, post)
     # creates a test post
-    post = build_post("Hello world!")
     uri = URI.parse("https://bsky.social/xrpc/com.atproto.repo.createRecord")
     request = Net::HTTP::Post.new(uri)
     request.content_type = "application/json"
@@ -63,11 +52,78 @@ def create_text_post(session)
     req_options = {
         use_ssl: uri.scheme == "https"
     }
-
+    
     response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
         http.request(request)
     end
+end
 
+def build_post(text)
+    # prepares a self text post
+    now = DateTime.now
+    post = JSON.dump({
+        "text" => text,
+        "createdAt" => now,
+        "langs" => ["en-US"]
+    })
+    return post
+end
+
+def build_image_post(session, blob)
+    # prepares a self image post
+    post = JSON.dump({
+            "text" => "",
+            "createdAt" => DateTime.now,
+            "embed" => {
+                "$type" => "app.bsky.embed.images",
+                "images" => [
+                    {
+                        "alt" => "",
+                        "image" => blob
+                    }
+                ]
+            }
+        })
+    return post
+end
+
+def build_image_reply(session, uri, cid, root_uri = nil, root_cid = nil, blob)
+    # prepares a reply with an image
+
+    # set cids if the root message is the same as the reply 
+    if root_uri == nil
+        root_uri = uri
+    end
+    if root_cid == nil
+        root_cid = cid
+    end
+
+    post = JSON.dump({
+        "$type" => "app.bsky.feed.post",
+        "text" => "",
+        "createdAt" => DateTime.now,
+        "langs" => ["en_US"],
+        "embed" => {
+            "$type" => "app.bsky.embed.images",
+            "images" => [
+                {
+                    "alt" => "",
+                    "image" => blob
+                }
+            ]
+        },
+        "reply" => {
+            "root" => {
+                "uri" => root_uri,
+                "cid" => root_cid
+            },
+            "parent" => {
+                "uri" => uri,
+                "cid" => cid
+            }
+        }
+    })
+    return post
 end
 
 def upload_image(session, img_bytes, image_url)
@@ -104,40 +160,6 @@ def upload_image(session, img_bytes, image_url)
     end
 end
 
-def send_image_post(session, blob)
-    # initialize request
-    uri = URI.parse("https://bsky.social/xrpc/com.atproto.repo.createRecord")
-    request = Net::HTTP::Post.new(uri)
-    request.content_type = "application/json"
-    request["Authorization"] = "Bearer #{session["accessJwt"]}"
-    # post body
-    request.body = JSON.dump({
-        "repo" => session["did"],
-        "collection" => "app.bsky.feed.post",
-        "record" => {
-            "text" => "",
-            "createdAt" => DateTime.now,
-            "embed" => {
-                "$type" => "app.bsky.embed.images",
-                "images" => [
-                    {
-                        "alt" => "",
-                        "image" => blob
-                    }
-                ]
-            }
-        }
-    })
-
-    req_options = {
-        use_ssl: uri.scheme == "https"
-    }
-
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-        http.request(request)
-    end
-    return response
-end
 
 def get_notifs(session)
     # fetch a list of reply and mention notifications

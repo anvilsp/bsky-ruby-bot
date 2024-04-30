@@ -53,7 +53,8 @@ def create_random_post(animal_types)
     
     # check if image uploaded correctly
     if(uploaded_image)
-        puts send_image_post(session, uploaded_image)
+        image_post = build_image_post(session, uploaded_image)
+        puts send_post(session, image_post).body
     else
         puts "Image upload failed."
     end
