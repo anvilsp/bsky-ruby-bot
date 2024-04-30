@@ -6,56 +6,39 @@ require 'json'
 require 'date'
 require 'open-uri'
 require 'stringio'
+require 'httparty'
 
 Dotenv.load('bsky.env')
 
 def bsky_connect
     # creates bsky connection
-    uri = URI.parse("https://bsky.social/xrpc/com.atproto.server.createSession")
-    request = Net::HTTP::Post.new(uri)
-    request.content_type = "application/json"
-    request.body = JSON.dump({
-        "identifier" => ENV['BSKY_IDENTIFIER'],
-        "password" => ENV['BSKY_APP_PASSWORD']
-    })
-
-    req_options = {
-        use_ssl: uri.scheme == "https",
-    }
-
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-        http.request(request)
-    end
-    
-    # check if the connection was successful, otherwise give an error
-    case response
-    when Net::HTTPSuccess
-        return JSON.parse(response.body)
-    else
-        puts "Session error: #{response.code} #{response.message}"
-        return nil
-    end
+    request = HTTParty.post(
+        'https://bsky.social/xrpc/com.atproto.server.createSession',
+        body: JSON.dump({
+            "identifier" => ENV['BSKY_IDENTIFIER'],
+            "password" => ENV['BSKY_APP_PASSWORD']
+        }),
+        headers: {
+            "Content-Type" => "application/json"
+        })
+    return JSON.parse(request.body)
 end
 
 
 def send_post(session, post)
-    # creates a test post
-    uri = URI.parse("https://bsky.social/xrpc/com.atproto.repo.createRecord")
-    request = Net::HTTP::Post.new(uri)
-    request.content_type = "application/json"
-    request["Authorization"] = "Bearer #{session["accessJwt"]}"
-    request.body = JSON.dump({
-        "repo" => session["did"],
-        "collection" => "app.bsky.feed.post",
-        "record" => JSON.parse(post)
-    })
-    req_options = {
-        use_ssl: uri.scheme == "https"
-    }
-    
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-        http.request(request)
-    end
+    # sends a generated post
+    request = HTTParty.post(
+        'https://bsky.social/xrpc/com.atproto.repo.createRecord',
+        body: JSON.dump({
+            "repo" => session["did"],
+            "collection" => "app.bsky.feed.post",
+            "record" => JSON.parse(post)
+        }),
+        headers: {
+            "Content-Type" => "application/json",
+            "Authorization" => "Bearer " + session["accessJwt"]
+        },
+    )
 end
 
 def build_post(text)
@@ -133,31 +116,17 @@ def upload_image(session, img_bytes, image_url)
         return nil 
     end
 
-    # upload image
-    uri = URI.parse("https://bsky.social/xrpc/com.atproto.repo.uploadBlob")
-    request = Net::HTTP::Post.new(uri)
-    request["Content-Type"] = "image/#{File.extname(image_url)}"
-    request["Authorization"] = "Bearer #{session["accessJwt"]}"
-    request.body = img_bytes
-
-    req_options = {
-        use_ssl: uri.scheme == "https"
-    }
-
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-        http.request(request)
-    end
-
-    # return the blob if the image is successfully uploaded - else nil
-    case response
-    when Net::HTTPSuccess
-        blob_response = JSON.parse(response.body)
-        blob = blob_response["blob"]
-        return blob
-    else
-        puts "Failed to upload image: #{response.code} #{response.message}"
-        return nil
-    end
+    # upload image (httparty)
+    resp = HTTParty.post(
+        'https://bsky.social/xrpc/com.atproto.repo.uploadBlob',
+        headers: {
+            "Content-Type" => "application/#{File.extname(image_url)}",
+            "Authorization" => "Bearer #{session["accessJwt"]}"            
+        },
+        body: img_bytes)
+    blob_response = JSON.parse(resp.body)
+    blob = blob_response["blob"]
+    return blob
 end
 
 
@@ -165,23 +134,15 @@ def get_notifs(session)
     # fetch a list of reply and mention notifications
     replies = []
     mentions = []
-
-    uri = URI.parse("https://bsky.social/xrpc/app.bsky.notification.listNotifications")
-    uri.query = URI.encode_www_form(accessJwt: session["accessJwt"])
-
-    # new http object
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == 'https'
-
-    # create get request
-    request = Net::HTTP::Get.new(uri)
-    request["Authorization"] = "Bearer #{session["accessJwt"]}"
-
-    # process request
-    response = http.request(request)
+    resp = HTTParty.get(
+        'https://bsky.social/xrpc/app.bsky.notification.listNotifications',
+        headers: {
+            "Content-Type" => "application/json",
+            "Authorization" => "Bearer #{session["accessJwt"]}"
+        })
 
     # get json of response
-    notif_json = JSON.parse(response.body)
+    notif_json = JSON.parse(resp.body)
 
     # retrieve 50 most recent notifications
     notifs = notif_json['notifications'][0..50]
