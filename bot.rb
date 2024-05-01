@@ -7,6 +7,7 @@ require 'date'
 require 'open-uri'
 require 'stringio'
 
+
 def create_random_post(animal_types)
     # generate bsky session
     session = bsky_connect
@@ -32,7 +33,7 @@ end
 def do_replies(session)
     # get notifications and split into categories
     notifications = get_notifs(session)
-    puts notifications
+    #puts notifications
     # only clone replies array if not nil
     notif_replies = notifications["replies".to_sym]
     notif_mentions = notifications["mentions".to_sym]
@@ -95,7 +96,7 @@ def do_replies(session)
             mention_text.sub! handle, ''
         end
         mention_text = mention_text.strip
-        puts mention_text
+        #puts mention_text
         
         # check if reply is a part of a chain, and grab root the uri and cid if it is
         if mention["record"].include?("reply")
