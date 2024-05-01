@@ -2,6 +2,8 @@
 This Bluesky bot is capable of posting a random animal photo or responding to replies/mentions with a selection of five species.
 Random animal API selection is based on https://github.com/treboryx/animalsAPI
 
+Live instance is available at https://bsky.app/profile/ruby-bot.bsky.social
+
 ## Setup
 1. Ensure that Ruby is installed in your environment.
 2. Run `bundle install` to install the dependencies from `Gemfile`.
