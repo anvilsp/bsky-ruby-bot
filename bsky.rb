@@ -7,6 +7,7 @@ require 'date'
 require 'open-uri'
 require 'stringio'
 require 'httparty'
+require_relative('animals')
 
 Dotenv.load('bsky.env')
 
@@ -24,6 +25,9 @@ def bsky_connect
     return JSON.parse(request.body)
 end
 
+def get_bsky_handle
+    return ENV["BSKY_IDENTIFIER"]
+end
 
 def send_post(session, post)
     # sends a generated post
@@ -70,22 +74,14 @@ def build_image_post(session, blob)
     return post
 end
 
-def build_image_reply(session, uri, cid, root_uri = nil, root_cid = nil, blob)
+def build_image_reply(session, blob, uri, cid, root_uri, root_cid, text = nil)
     # prepares a reply with an image
-
-    # set cids if the root message is the same as the reply 
-    if root_uri == nil
-        root_uri = uri
-    end
-    if root_cid == nil
-        root_cid = cid
-    end
 
     post = JSON.dump({
         "$type" => "app.bsky.feed.post",
-        "text" => "",
+        "text" => "#{text}",
         "createdAt" => DateTime.now,
-        "langs" => ["en_US"],
+        "langs" => ["en-US"],
         "embed" => {
             "$type" => "app.bsky.embed.images",
             "images" => [
@@ -116,7 +112,7 @@ def upload_image(session, img_bytes, image_url)
         return nil 
     end
 
-    # upload image (httparty)
+    # upload image
     resp = HTTParty.post(
         'https://bsky.social/xrpc/com.atproto.repo.uploadBlob',
         headers: {
@@ -144,8 +140,8 @@ def get_notifs(session)
     # get json of response
     notif_json = JSON.parse(resp.body)
 
-    # retrieve 50 most recent notifications
-    notifs = notif_json['notifications'][0..50]
+    # retrieve 5 most recent notifications
+    notifs = notif_json['notifications'][0..5]
 
     # iterate through notifications
     for item in notifs
@@ -158,7 +154,7 @@ def get_notifs(session)
             mentions.push(item)
         end
     end
-    mark_as_read(session)
+    #mark_as_read(session)
     return {"replies": replies, "mentions": mentions}
 end
 
