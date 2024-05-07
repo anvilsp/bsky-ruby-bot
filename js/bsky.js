@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 async function bskyConnect() {
-    request = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession",
+    let request = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession",
         {
             method: "POST",
             body: JSON.stringify({
@@ -21,7 +21,7 @@ async function getBskyHandle() {
 }
 
 async function sendPost(session, post) {
-    request = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord",
+    let request = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord",
         {
             method: "POST",
             body: JSON.stringify({
@@ -40,7 +40,7 @@ async function sendPost(session, post) {
 }
 
 function buildPost(text) {
-    post = {
+    let post = {
         "text": text,
         "createdAt": new Date().toISOString(),
         "langs": ["en-US"]
@@ -49,7 +49,7 @@ function buildPost(text) {
 }
 
 function buildImagePost(blob) {
-    post = {
+    let post = {
         "text": "",
         "createdAt": new Date().toIsoString(),
         "langs": ["en-US"],
@@ -67,7 +67,7 @@ function buildImagePost(blob) {
 }
 
 function buildImageReply(blob, uri, cid, root_uri, root_cid, text) {
-    post = {
+    let post = {
         "$type": "app.bsky.feed.post",
         "text": `${text}`,
         "createdAt": new Date().toIsoString(),
@@ -97,14 +97,14 @@ function buildImageReply(blob, uri, cid, root_uri, root_cid, text) {
 
 async function uploadImage(session, img_bytes, image_url) {
 
-    file_ext = image_url.split('.').pop();
+    let file_ext = image_url.split('.').pop();
 
     if(img_bytes.length > 1000000) {
         console.log("Error: image is too large");
         return;
     }
 
-    resp = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord",
+    let resp = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord",
     {
         method: "POST",
         body: img_bytes,
