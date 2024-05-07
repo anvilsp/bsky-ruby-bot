@@ -78,7 +78,7 @@ end
 def build_image_reply(blob, uri, cid, root_uri, root_cid, text = nil)
     # prepares a reply with an image
 
-    post = {
+    post = JSON.dump({
         "$type" => "app.bsky.feed.post",
         "text" => "#{text}",
         "createdAt" => DateTime.now,
@@ -102,7 +102,7 @@ def build_image_reply(blob, uri, cid, root_uri, root_cid, text = nil)
                 "cid" => cid
             }
         }
-    }
+    })
     return post
 end
 
