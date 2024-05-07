@@ -23,7 +23,7 @@ def create_random_post(animal_types)
     
     # check if image uploaded correctly
     if(uploaded_image)
-        image_post = build_image_post(session, uploaded_image)
+        image_post = build_image_post(uploaded_image)
         puts send_post(session, image_post).body
     else
         puts "Image upload failed."
@@ -131,7 +131,7 @@ def do_replies(session)
         end
         # check if image uploaded correctly
         if(uploaded_image)
-            image_post = build_image_reply(session, uploaded_image, mention_uri, mention_cid, root_uri, root_cid, text)
+            image_post = build_image_reply(uploaded_image, mention_uri, mention_cid, root_uri, root_cid, text)
             puts send_post(session, image_post).body
         else
             puts "Image upload failed."

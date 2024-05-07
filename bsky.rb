@@ -56,11 +56,12 @@ def build_post(text)
     return post
 end
 
-def build_image_post(session, blob)
+def build_image_post(blob)
     # prepares a self image post
     post = JSON.dump({
             "text" => "",
             "createdAt" => DateTime.now,
+            "langs" => ["en-US"],
             "embed" => {
                 "$type" => "app.bsky.embed.images",
                 "images" => [
@@ -74,10 +75,10 @@ def build_image_post(session, blob)
     return post
 end
 
-def build_image_reply(session, blob, uri, cid, root_uri, root_cid, text = nil)
+def build_image_reply(blob, uri, cid, root_uri, root_cid, text = nil)
     # prepares a reply with an image
 
-    post = JSON.dump({
+    post = {
         "$type" => "app.bsky.feed.post",
         "text" => "#{text}",
         "createdAt" => DateTime.now,
@@ -101,7 +102,7 @@ def build_image_reply(session, blob, uri, cid, root_uri, root_cid, text = nil)
                 "cid" => cid
             }
         }
-    })
+    }
     return post
 end
 
@@ -154,7 +155,8 @@ def get_notifs(session)
             mentions.push(item)
         end
     end
-    #mark_as_read(session)
+
+    # return separated arrays
     return {"replies": replies, "mentions": mentions}
 end
 
@@ -172,3 +174,4 @@ def mark_as_read(session)
     )
     return resp
 end
+
