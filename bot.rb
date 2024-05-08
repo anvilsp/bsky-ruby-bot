@@ -79,7 +79,7 @@ def do_replies(session)
         # check if image uploaded correctly
         if(uploaded_image)
             image_post = build_image_reply(session, uploaded_image, reply_uri, reply_cid, root_uri, root_cid, text)
-            puts send_post(session, image_post).body
+            puts send_post(session, image_post)
         else
             puts "Image upload failed."
         end
@@ -132,7 +132,7 @@ def do_replies(session)
         # check if image uploaded correctly
         if(uploaded_image)
             image_post = build_image_reply(uploaded_image, mention_uri, mention_cid, root_uri, root_cid, text)
-            puts send_post(session, image_post).body
+            puts send_post(session, image_post)
         else
             puts "Image upload failed."
         end
