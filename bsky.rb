@@ -22,7 +22,13 @@ def bsky_connect
         headers: {
             "Content-Type" => "application/json"
         })
-    return JSON.parse(request.body)
+    
+    if request.success?
+        return JSON.parse(request.body)
+    else
+        puts "Error: Code #{request.code}\nResponse: #{request}"
+        exit
+    end
 end
 
 def get_bsky_handle
@@ -43,6 +49,12 @@ def send_post(session, post)
             "Authorization" => "Bearer " + session["accessJwt"]
         },
     )
+    if request.success?
+        return JSON.parse(request.body)
+    else
+        puts "Error: Code #{request.code}\nResponse: #{request}"
+        exit
+    end
 end
 
 def build_post(text)
@@ -121,9 +133,14 @@ def upload_image(session, img_bytes, image_url)
             "Authorization" => "Bearer #{session["accessJwt"]}"            
         },
         body: img_bytes)
-    blob_response = JSON.parse(resp.body)
-    blob = blob_response["blob"]
-    return blob
+    if resp.success?
+        blob_response = JSON.parse(resp.body)
+        blob = blob_response["blob"]
+        return blob
+    else
+        puts "Error: Code #{request.code}\nResponse: #{resp}"
+        exit
+    end
 end
 
 
@@ -138,26 +155,31 @@ def get_notifs(session)
             "Authorization" => "Bearer #{session["accessJwt"]}"
         })
 
-    # get json of response
-    notif_json = JSON.parse(resp.body)
+    if resp.success?
+        # get json of response
+        notif_json = JSON.parse(resp.body)
 
-    # retrieve 5 most recent notifications
-    notifs = notif_json['notifications'][0..5]
+        # retrieve 5 most recent notifications
+        notifs = notif_json['notifications'][0..5]
 
-    # iterate through notifications
-    for item in notifs
-        # only process unread notifications that are replies or mentions
-        if (item['reason'] != "reply" and item['reason'] != "mention") or item['isRead']
-            next
-        elsif item['reason'] == "reply" # append replies to an array
-            replies.push(item)
-        elsif item['reason'] == "mention" # append mentions to an array
-            mentions.push(item)
+        # iterate through notifications
+        for item in notifs
+            # only process unread notifications that are replies or mentions
+            if (item['reason'] != "reply" and item['reason'] != "mention") or item['isRead']
+                next
+            elsif item['reason'] == "reply" # append replies to an array
+                replies.push(item)
+            elsif item['reason'] == "mention" # append mentions to an array
+                mentions.push(item)
+            end
         end
-    end
 
-    # return separated arrays
-    return {"replies": replies, "mentions": mentions}
+        # return separated arrays
+        return {"replies": replies, "mentions": mentions}
+    else
+        puts "Error: Code #{request.code}\nResponse: #{resp}"
+        exit
+    end
 end
 
 def mark_as_read(session)
@@ -172,6 +194,11 @@ def mark_as_read(session)
             "seenAt" => DateTime.now
         })
     )
-    return resp
+    if resp.success?
+        return resp
+    else
+        puts "Error: Code #{request.code}\nResponse: #{resp}"
+        exit
+    end
 end
 

@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 async function bskyConnect() {
+    // creates bsky connection
     let request = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession",
         {
             method: "POST",
@@ -13,7 +14,7 @@ async function bskyConnect() {
             }
         }
     );
-    return await request;
+    return request;
 }
 
 async function getBskyHandle() {
@@ -21,6 +22,7 @@ async function getBskyHandle() {
 }
 
 async function sendPost(session, post) {
+    // sends a generated post
     let request = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord",
         {
             method: "POST",
@@ -40,6 +42,7 @@ async function sendPost(session, post) {
 }
 
 function buildPost(text) {
+    // prepares a self text post
     let post = {
         "text": text,
         "createdAt": new Date().toISOString(),
@@ -49,6 +52,7 @@ function buildPost(text) {
 }
 
 function buildImagePost(blob) {
+    // prepares a self image post
     let post = {
         "text": "",
         "createdAt": new Date().toIsoString(),
@@ -67,6 +71,7 @@ function buildImagePost(blob) {
 }
 
 function buildImageReply(blob, uri, cid, root_uri, root_cid, text) {
+    // prepares a reply with an image
     let post = {
         "$type": "app.bsky.feed.post",
         "text": `${text}`,
@@ -114,7 +119,7 @@ async function uploadImage(session, img_bytes, image_url) {
         }
     });
 
-    return await resp;
+    return resp;
 }
 
 async function getNotifs(session) {
@@ -132,7 +137,7 @@ async function getNotifs(session) {
     let notif_json = await resp.json();
 
     // retrieve 5 most recent notifications
-    let notifs = await notif_json['notifications'].slice(0, 5)
+    let notifs = await notif_json['notifications'].slice(0, 5);
 
     // iterate through notifications
     for(const item of notifs) {
@@ -146,7 +151,7 @@ async function getNotifs(session) {
     }
 
     // return separated arrays
-    return {"replies": replies, "mentions": mentions}
+    return {"replies": replies, "mentions": mentions};
 }
 
 async function markAsRead(session) {

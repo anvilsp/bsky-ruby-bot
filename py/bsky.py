@@ -110,6 +110,7 @@ def upload_image(session, img_bytes, image_url):
     return blob
 
 def get_notifs(session):
+    # fetch a list of reply and mention notifications
     replies = []
     mentions = []
 
@@ -118,13 +119,15 @@ def get_notifs(session):
                      headers = {
                             "Authorization": f"Bearer {session['accessJwt']}"
                         })
-    
+    resp.raise_for_status()
+
     # get json of response
     notif_json = resp.json()
 
     # retrieve 5 most recent notifications
     notifs = notif_json['notifications'][:5]
 
+    # iterate through notifications
     for item in notifs:
     # get notifications that fit our criteria
         if (item['reason'] != "reply" and item['reason'] != "mention") or item['isRead']:
